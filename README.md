@@ -9,8 +9,9 @@ adding a file you can browse the external storage to choose the exact
 destination directory.
 
 The app uses the `permission_handler` plugin to request storage access on
-Android 10 and below. For Android 11 and later it relies on the `saf`
-package to request a directory using the Storage Access Framework. Grant
+Android 10 and below. For Android 11 and later it relies on the
+`document_file_save_plus` package to request a directory using the
+Storage Access Framework. Grant
 permission when prompted so the app can write to removable drives.
 You can pick any file using the system file picker via **Select File**.
 The **Select Output** button now opens the system directory picker so you can

@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'saf_stub.dart';
+import 'document_file_save_plus_stub.dart';
 
 import 'storage_browser.dart';
 
@@ -149,10 +149,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _selectOutputDirectory() async {
     final sdk = await _androidVersion();
     if (Platform.isAndroid && sdk >= 30) {
-      final uri = await Saf.openDocumentTree();
+      final uri = await DocumentFileSavePlus.openDocumentTree();
       if (!mounted) return;
       if (uri != null) {
-        final granted = await Saf.persistPermissions(uri);
+        final granted = await DocumentFileSavePlus.persistPermissions(uri);
         if (granted) {
           setState(() {
             _outputUri = Uri.parse(uri);
@@ -203,12 +203,12 @@ class _MyHomePageState extends State<MyHomePage> {
     final sdk = await _androidVersion();
     if (Platform.isAndroid && sdk >= 30 && _outputUri != null) {
       try {
-        await Saf.writeToFile(
+        await DocumentFileSavePlus.writeToFile(
           uri: _outputUri!.toString(),
           name: fileName,
           bytes: bytes,
         );
-        setState(() => _status = 'File copied using SAF');
+        setState(() => _status = 'File copied using DocumentFileSavePlus');
       } catch (e) {
         setState(() => _status = 'Failed to copy file: $e');
       }
