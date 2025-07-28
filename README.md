@@ -21,7 +21,7 @@ android {
 
 ### Storage permissions
 
-The sample scans `/storage` for removable media. Grant the Storage
+The sample scans `/storage` for removable media. Items are displayed alphabetically. Grant the Storage
 permission on first launch so the app can access external files.
 
 ## Getting Started

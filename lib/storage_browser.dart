@@ -25,6 +25,8 @@ class _StorageBrowserState extends State<StorageBrowser> {
 
   Future<void> _refresh() async {
     final items = await _dir.list().toList();
+    items.sort((a, b) =>
+        p.basename(a.path).toLowerCase().compareTo(p.basename(b.path).toLowerCase()));
     setState(() {
       _items = items;
     });
