@@ -41,6 +41,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String _status = "Idle";
   List<Directory> _devices = [];
   File? _selectedFile;
+  Uint8List? _selectedBytes;
+  String? _selectedFileName;
   Directory? _outputDir;
 
   @override
@@ -91,10 +93,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles();
+    final result = await FilePicker.platform.pickFiles(withData: true);
     if (!mounted) return;
-    if (result != null && result.files.single.path != null) {
-      setState(() => _selectedFile = File(result.files.single.path!));
+    if (result != null) {
+      setState(() {
+        final file = result.files.single;
+        _selectedFileName = file.name;
+        _selectedBytes = file.bytes;
+        _selectedFile =
+            file.path != null ? File(file.path!) : null;
+      });
     }
   }
 
@@ -107,10 +115,25 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _copySelectedFile() async {
-    if (_selectedFile == null || _outputDir == null) return;
+    if (_outputDir == null) return;
+    final fileName = _selectedFileName ??
+        (_selectedFile != null ? p.basename(_selectedFile!.path) : null);
+    if (fileName == null) return;
+
+    final destPath = p.join(_outputDir!.path, fileName);
+
     try {
-      final destPath = p.join(_outputDir!.path, p.basename(_selectedFile!.path));
-      await _selectedFile!.copy(destPath);
+      if (_selectedBytes != null) {
+        await File(destPath).writeAsBytes(_selectedBytes!, flush: true);
+      } else if (_selectedFile != null) {
+        if (!await _selectedFile!.exists()) {
+          setState(() => _status = 'Selected file not found');
+          return;
+        }
+        await _selectedFile!.copy(destPath);
+      } else {
+        return;
+      }
       setState(() => _status = 'File copied to ${_outputDir!.path}');
     } catch (e) {
       setState(() => _status = 'Failed to copy file: $e');
@@ -193,11 +216,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: _pickFile,
                   child: const Text('Select File'),
                 ),
-                if (_selectedFile != null)
+                if (_selectedFile != null || _selectedFileName != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      p.basename(_selectedFile!.path),
+                      _selectedFile != null
+                          ? p.basename(_selectedFile!.path)
+                          : _selectedFileName!,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -216,7 +241,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 const SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: (_selectedFile != null && _outputDir != null)
+                  onPressed: ((_selectedFile != null || _selectedBytes != null) &&
+                          _outputDir != null)
                       ? _copySelectedFile
                       : null,
                   child: const Text('Copy File'),
