@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
-import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:usb_serial/usb_serial.dart';
+
 import 'storage_browser.dart';
 
 void main() {
@@ -37,6 +40,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _status = "Idle";
   List<Directory> _devices = [];
+  File? _selectedFile;
 
   @override
   void initState() {
@@ -66,6 +70,14 @@ class _MyHomePageState extends State<MyHomePage> {
         return name != 'self' && name != 'emulated';
       }).toList();
       setState(() => _devices = filtered);
+    }
+  }
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (!mounted) return;
+    if (result != null && result.files.single.path != null) {
+      setState(() => _selectedFile = File(result.files.single.path!));
     }
   }
 
@@ -140,6 +152,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () => downloadAndSendToUsb(fileUrl),
                   child: const Text("Download & Upload to USB"),
                 ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _pickFile,
+                  child: const Text('Select File'),
+                ),
+                if (_selectedFile != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      p.basename(_selectedFile!.path),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
               ],
             ),
           ),
