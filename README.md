@@ -8,9 +8,10 @@ one opens a file browser where you can add, delete or rename files. When
 adding a file you can browse the external storage to choose the exact
 destination directory.
 
-The app uses the `permission_handler` plugin to request storage access. On
-Android 11 and later it also requests the `MANAGE_EXTERNAL_STORAGE`
-permission so it can write to removable media.
+The app uses the `permission_handler` plugin to request storage access on
+Android 10 and below. For Android 11 and later it relies on the `saf`
+package to request a directory using the Storage Access Framework. Grant
+permission when prompted so the app can write to removable drives.
 You can pick any file using the system file picker via **Select File**.
 The **Select Output** button now opens the system directory picker so you can
 choose a destination folder. After selecting both a file and an output

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:saf/saf.dart';
 
 import 'storage_browser.dart';
 
@@ -43,23 +45,33 @@ class _MyHomePageState extends State<MyHomePage> {
   Uint8List? _selectedBytes;
   String? _selectedFileName;
   Directory? _outputDir;
+  Uri? _outputUri;
+  final _deviceInfo = DeviceInfoPlugin();
+
+  Future<int> _androidVersion() async {
+    if (!Platform.isAndroid) return 0;
+    final info = await _deviceInfo.androidInfo;
+    return info.version.sdkInt;
+  }
 
   Future<bool> _requestStoragePermissions() async {
-    var status = await Permission.storage.request();
-    if (Platform.isAndroid) {
+    final status = await Permission.storage.request();
+    if (!status.isGranted) {
+      if (status.isPermanentlyDenied) await openAppSettings();
+      return false;
+    }
+    final sdk = await _androidVersion();
+    if (Platform.isAndroid && sdk >= 30) {
+      // Additional manage_external_storage permission is needed only
+      // when writing without SAF on Android 11+.
       var manage = await Permission.manageExternalStorage.status;
       if (!manage.isGranted) {
         manage = await Permission.manageExternalStorage.request();
       }
-      if (manage.isGranted) {
-        status = manage;
+      if (!manage.isGranted) {
+        if (manage.isPermanentlyDenied) await openAppSettings();
+        return false;
       }
-    }
-    if (!status.isGranted) {
-      if (status.isPermanentlyDenied) {
-        await openAppSettings();
-      }
-      return false;
     }
     return true;
   }
@@ -135,11 +147,32 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _selectOutputDirectory() async {
+    final sdk = await _androidVersion();
+    if (Platform.isAndroid && sdk >= 30) {
+      final uri = await Saf.openDocumentTree();
+      if (!mounted) return;
+      if (uri != null) {
+        final granted = await Saf.persistPermissions(uri);
+        if (granted) {
+          setState(() {
+            _outputUri = Uri.parse(uri);
+            _outputDir = null;
+          });
+        } else {
+          setState(() => _status = 'Storage permission denied');
+        }
+      }
+      return;
+    }
+
     final path = await FilePicker.platform.getDirectoryPath();
     if (!mounted) return;
     if (path != null) {
       if (await _requestStoragePermissions()) {
-        setState(() => _outputDir = Directory(path));
+        setState(() {
+          _outputDir = Directory(path);
+          _outputUri = null;
+        });
       } else {
         setState(() => _status = 'Storage permission denied');
       }
@@ -147,30 +180,51 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _copySelectedFile() async {
-    if (_outputDir == null) return;
     final fileName = _selectedFileName ??
         (_selectedFile != null ? p.basename(_selectedFile!.path) : null);
     if (fileName == null) return;
 
-    final destPath = p.join(_outputDir!.path, fileName);
+    final bytes = _selectedBytes ??
+        (_selectedFile != null ? await _selectedFile!.readAsBytes() : null);
+    if (bytes == null) return;
+
+    final internal = await getExternalStorageDirectory();
+    if (internal != null) {
+      try {
+        final test = File(p.join(internal.path, '.perm_test'));
+        await test.writeAsBytes([0]);
+        await test.delete();
+      } catch (e) {
+        setState(() => _status = 'Cannot write to internal storage: $e');
+        return;
+      }
+    }
+
+    final sdk = await _androidVersion();
+    if (Platform.isAndroid && sdk >= 30 && _outputUri != null) {
+      try {
+        await Saf.writeToFile(
+          uri: _outputUri!.toString(),
+          name: fileName,
+          bytes: bytes,
+        );
+        setState(() => _status = 'File copied using SAF');
+      } catch (e) {
+        setState(() => _status = 'Failed to copy file: $e');
+      }
+      return;
+    }
+
+    if (_outputDir == null) return;
     if (!await _requestStoragePermissions()) {
       setState(() => _status = 'Storage permission denied');
       return;
     }
 
+    final destPath = p.join(_outputDir!.path, fileName);
     try {
       await _outputDir!.create(recursive: true);
-      if (_selectedBytes != null) {
-        await File(destPath).writeAsBytes(_selectedBytes!, flush: true);
-      } else if (_selectedFile != null) {
-        if (!await _selectedFile!.exists()) {
-          setState(() => _status = 'Selected file not found');
-          return;
-        }
-        await _selectedFile!.copy(destPath);
-      } else {
-        return;
-      }
+      await File(destPath).writeAsBytes(bytes, flush: true);
       setState(() => _status = 'File copied to ${_outputDir!.path}');
     } catch (e) {
       setState(() => _status = 'Failed to copy file: $e');
@@ -215,18 +269,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: _selectOutputDirectory,
                   child: const Text('Select Output'),
                 ),
-                if (_outputDir != null)
+                if (_outputDir != null || _outputUri != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      _outputDir!.path,
+                      _outputDir != null
+                          ? _outputDir!.path
+                          : _outputUri!.toString(),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: ((_selectedFile != null || _selectedBytes != null) &&
-                          _outputDir != null)
+                          (_outputDir != null || _outputUri != null))
                       ? _copySelectedFile
                       : null,
                   child: const Text('Copy File'),
