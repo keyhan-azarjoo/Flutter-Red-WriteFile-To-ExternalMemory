@@ -53,8 +53,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _ensurePermission() async {
     var status = await Permission.storage.request();
-    if (!status.isGranted && Permission.manageExternalStorage.isSupported) {
-      status = await Permission.manageExternalStorage.request();
+    if (!status.isGranted && Platform.isAndroid) {
+      final manage = await Permission.manageExternalStorage.request();
+      if (manage.isGranted) {
+        status = manage;
+      }
     }
     if (status.isGranted) {
       _scanStorage();
