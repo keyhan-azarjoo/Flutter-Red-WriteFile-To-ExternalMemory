@@ -35,6 +35,7 @@ class _StorageBrowserState extends State<StorageBrowser> {
 
   Future<void> _addFile() async {
     final result = await FilePicker.platform.pickFiles();
+    if (!mounted) return;
     if (result == null || result.files.single.path == null) return;
     final src = File(result.files.single.path!);
     final destDir = await Navigator.push<Directory?>(
@@ -43,6 +44,7 @@ class _StorageBrowserState extends State<StorageBrowser> {
         builder: (_) => DirectoryPicker(initialDirectory: _dir),
       ),
     );
+    if (!mounted) return;
     if (destDir == null) return;
     final dest = File(p.join(destDir.path, p.basename(src.path)));
     await src.copy(dest.path);

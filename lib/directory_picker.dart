@@ -25,7 +25,11 @@ class _DirectoryPickerState extends State<DirectoryPicker> {
   }
 
   Future<void> _refresh() async {
-    final entries = await _dir.list().whereType<Directory>().toList();
+    final entries = await _dir
+        .list()
+        .where((e) => e is Directory)
+        .cast<Directory>()
+        .toList();
     entries.sort(
       (a, b) => p.basename(a.path).toLowerCase().compareTo(
             p.basename(b.path).toLowerCase(),
@@ -47,14 +51,16 @@ class _DirectoryPickerState extends State<DirectoryPicker> {
             return ListTile(
               leading: const Icon(Icons.folder),
               title: Text(p.basename(d.path)),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DirectoryPicker(initialDirectory: d),
-                ),
-              ).then((value) {
+              onTap: () async {
+                final value = await Navigator.push<Directory?>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DirectoryPicker(initialDirectory: d),
+                  ),
+                );
+                if (!mounted) return;
                 if (value != null) Navigator.pop(context, value);
-              }),
+              },
             );
           },
         ),

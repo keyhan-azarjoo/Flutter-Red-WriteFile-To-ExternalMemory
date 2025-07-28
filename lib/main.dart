@@ -58,7 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
     if (await root.exists()) {
       final entries = await root
           .list()
-          .whereType<Directory>()
+          .where((e) => e is Directory)
+          .cast<Directory>()
           .toList();
       final filtered = entries.where((d) {
         final name = p.basename(d.path);
