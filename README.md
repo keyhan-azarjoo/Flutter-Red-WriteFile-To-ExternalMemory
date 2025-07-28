@@ -8,7 +8,9 @@ one opens a file browser where you can add, delete or rename files. When
 adding a file you can browse the external storage to choose the exact
 destination directory.
 
-The app uses the `permission_handler` plugin to request storage access.
+The app uses the `permission_handler` plugin to request storage access. On
+Android 11 and later it also requests the `MANAGE_EXTERNAL_STORAGE`
+permission so it can write to removable media.
 You can pick any file using the system file picker via **Select File**.
 The **Select Output** button now opens the system directory picker so you can
 choose a destination folder. After selecting both a file and an output
@@ -31,8 +33,8 @@ android {
 
 The sample scans several common directories for removable media, including
 `/storage`, `/mnt`, `/media`, `/run/media` and `/sdcard`. Items are displayed
-alphabetically. Grant the Storage permission on first launch so the app can
-access external files.
+alphabetically. Grant the Storage permission (and "All files access" on newer
+Android versions) on first launch so the app can access external files.
 
 ## Getting Started
 
