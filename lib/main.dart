@@ -9,7 +9,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:usb_serial/usb_serial.dart';
 
 import 'storage_browser.dart';
-import 'directory_picker.dart';
 
 void main() {
   runApp(const MyApp());
@@ -100,19 +99,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _selectOutputDirectory() async {
-    if (_devices.isEmpty) {
-      setState(() => _status = 'No external storage detected');
-      return;
-    }
-    final dir = await Navigator.push<Directory?>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DirectoryPicker(initialDirectory: _devices.first),
-      ),
-    );
+    final path = await FilePicker.platform.getDirectoryPath();
     if (!mounted) return;
-    if (dir != null) {
-      setState(() => _outputDir = dir);
+    if (path != null) {
+      setState(() => _outputDir = Directory(path));
     }
   }
 

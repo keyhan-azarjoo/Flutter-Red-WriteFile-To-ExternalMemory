@@ -9,6 +9,9 @@ adding a file you can browse the external storage to choose the exact
 destination directory.
 
 The app uses the `permission_handler` plugin to request storage access.
+You can pick any file using the system file picker via **Select File**.
+The **Select Output** button now opens the system directory picker so you can
+choose a destination folder.
 
 ### Android NDK version
 
