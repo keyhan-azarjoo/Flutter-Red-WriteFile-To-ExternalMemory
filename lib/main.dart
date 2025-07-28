@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 import 'package:usb_serial/usb_serial.dart';
+import 'storage_browser.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,6 +35,28 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _status = "Idle";
+  List<Directory> _devices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _scanStorage();
+  }
+
+  Future<void> _scanStorage() async {
+    final root = Directory('/storage');
+    if (await root.exists()) {
+      final entries = await root
+          .list()
+          .whereType<Directory>()
+          .toList();
+      final filtered = entries.where((d) {
+        final name = p.basename(d.path);
+        return name != 'self' && name != 'emulated';
+      }).toList();
+      setState(() => _devices = filtered);
+    }
+  }
 
   Future<void> downloadAndSendToUsb(String url) async {
     setState(() => _status = "Downloading file...");
@@ -92,18 +117,44 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(_status, textAlign: TextAlign.center),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => downloadAndSendToUsb(fileUrl),
-              child: const Text("Download & Upload to USB"),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Text(_status, textAlign: TextAlign.center),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => downloadAndSendToUsb(fileUrl),
+                  child: const Text("Download & Upload to USB"),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const Divider(),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _scanStorage,
+              child: ListView.builder(
+                itemCount: _devices.length,
+                itemBuilder: (context, index) {
+                  final d = _devices[index];
+                  return ListTile(
+                    title: Text(p.basename(d.path)),
+                    subtitle: Text(d.path),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => StorageBrowser(directory: d),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
