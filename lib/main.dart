@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:usb_serial/usb_serial.dart';
 
 import 'storage_browser.dart';
+import 'directory_picker.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String _status = "Idle";
   List<Directory> _devices = [];
   File? _selectedFile;
+  Directory? _outputDir;
 
   @override
   void initState() {
@@ -78,6 +80,23 @@ class _MyHomePageState extends State<MyHomePage> {
     if (!mounted) return;
     if (result != null && result.files.single.path != null) {
       setState(() => _selectedFile = File(result.files.single.path!));
+    }
+  }
+
+  Future<void> _selectOutputDirectory() async {
+    if (_devices.isEmpty) {
+      setState(() => _status = 'No external storage detected');
+      return;
+    }
+    final dir = await Navigator.push<Directory?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DirectoryPicker(initialDirectory: _devices.first),
+      ),
+    );
+    if (!mounted) return;
+    if (dir != null) {
+      setState(() => _outputDir = dir);
     }
   }
 
@@ -162,6 +181,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
                       p.basename(_selectedFile!.path),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _selectOutputDirectory,
+                  child: const Text('Select Output'),
+                ),
+                if (_outputDir != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      _outputDir!.path,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
