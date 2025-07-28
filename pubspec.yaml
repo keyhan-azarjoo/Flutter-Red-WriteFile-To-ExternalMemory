@@ -30,8 +30,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.6
-  usb_serial: ^0.5.2
   file_picker: ^10.2.0
   path: ^1.9.1
   permission_handler: ^12.0.1

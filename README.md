@@ -1,6 +1,6 @@
 # my_flutter_app
 
-This sample demonstrates basic USB interaction and browsing of external
+This sample demonstrates browsing of external
 storage connected to the device. The main screen lists any directories
 found under common mount points such as `/storage`, `/mnt`, `/media`,
 `/run/media` and `/sdcard` that are not part of the internal system storage. Tapping
@@ -16,18 +16,6 @@ The **Select Output** button now opens the system directory picker so you can
 choose a destination folder. After selecting both a file and an output
 directory, tap **Copy File** to copy the file to that folder. The app will
 create the destination directory if it does not already exist.
-
-### Android NDK version
-
-The `usb_serial` plugin requires Android NDK `27.0.12077973`. If you see a
-build failure mentioning a mismatched NDK version, update
-`android/app/build.gradle.kts`:
-
-```kotlin
-android {
-    ndkVersion = "27.0.12077973"
-}
-```
 
 ### Storage permissions
 
