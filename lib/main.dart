@@ -46,6 +46,26 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedFileName;
   Directory? _outputDir;
 
+  Future<bool> _requestStoragePermissions() async {
+    var status = await Permission.storage.request();
+    if (Platform.isAndroid) {
+      var manage = await Permission.manageExternalStorage.status;
+      if (!manage.isGranted) {
+        manage = await Permission.manageExternalStorage.request();
+      }
+      if (manage.isGranted) {
+        status = manage;
+      }
+    }
+    if (!status.isGranted) {
+      if (status.isPermanentlyDenied) {
+        await openAppSettings();
+      }
+      return false;
+    }
+    return true;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,16 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _ensurePermission() async {
-    var status = await Permission.storage.request();
-    if (!status.isGranted && Platform.isAndroid) {
-      final manage = await Permission.manageExternalStorage.request();
-      if (manage.isGranted) {
-        status = manage;
-      } else if (manage.isPermanentlyDenied) {
-        await openAppSettings();
-      }
-    }
-    if (status.isGranted) {
+    if (await _requestStoragePermissions()) {
       _scanStorage();
     } else {
       setState(() => _status = 'Storage permission denied');
@@ -129,7 +140,11 @@ class _MyHomePageState extends State<MyHomePage> {
     final path = await FilePicker.platform.getDirectoryPath();
     if (!mounted) return;
     if (path != null) {
-      setState(() => _outputDir = Directory(path));
+      if (await _requestStoragePermissions()) {
+        setState(() => _outputDir = Directory(path));
+      } else {
+        setState(() => _status = 'Storage permission denied');
+      }
     }
   }
 
@@ -140,18 +155,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if (fileName == null) return;
 
     final destPath = p.join(_outputDir!.path, fileName);
-    var status = await Permission.storage.request();
-    if (!status.isGranted) {
-      if (Platform.isAndroid) {
-        status = await Permission.manageExternalStorage.request();
-      }
-      if (!status.isGranted) {
-        if (status.isPermanentlyDenied) {
-          await openAppSettings();
-        }
-        setState(() => _status = 'Storage permission denied');
-        return;
-      }
+    if (!await _requestStoragePermissions()) {
+      setState(() => _status = 'Storage permission denied');
+      return;
     }
 
     try {
