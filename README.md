@@ -12,7 +12,8 @@ The app uses the `permission_handler` plugin to request storage access.
 You can pick any file using the system file picker via **Select File**.
 The **Select Output** button now opens the system directory picker so you can
 choose a destination folder. After selecting both a file and an output
-directory, tap **Copy File** to copy the file to that folder.
+directory, tap **Copy File** to copy the file to that folder. The app will
+create the destination directory if it does not already exist.
 
 ### Android NDK version
 

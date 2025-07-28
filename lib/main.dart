@@ -123,6 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final destPath = p.join(_outputDir!.path, fileName);
 
     try {
+      await _outputDir!.create(recursive: true);
       if (_selectedBytes != null) {
         await File(destPath).writeAsBytes(_selectedBytes!, flush: true);
       } else if (_selectedFile != null) {
