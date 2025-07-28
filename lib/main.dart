@@ -60,19 +60,35 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _scanStorage() async {
-    final root = Directory('/storage');
-    if (await root.exists()) {
-      final entries = await root
-          .list()
-          .where((e) => e is Directory)
-          .cast<Directory>()
-          .toList();
-      final filtered = entries.where((d) {
-        final name = p.basename(d.path);
-        return name != 'self' && name != 'emulated';
-      }).toList();
-      setState(() => _devices = filtered);
+    final possibleRoots = [
+      Directory('/storage'),
+      Directory('/mnt'),
+      Directory('/media'),
+      Directory('/run/media'),
+      Directory('/sdcard'),
+    ];
+
+    final Set<String> seenPaths = {};
+    final List<Directory> found = [];
+
+    for (final root in possibleRoots) {
+      if (await root.exists()) {
+        final entries = await root
+            .list()
+            .where((e) => e is Directory)
+            .cast<Directory>()
+            .toList();
+        for (final d in entries) {
+          final name = p.basename(d.path);
+          if (name == 'self' || name == 'emulated') continue;
+          if (seenPaths.add(d.path)) {
+            found.add(d);
+          }
+        }
+      }
     }
+
+    setState(() => _devices = found);
   }
 
   Future<void> _pickFile() async {

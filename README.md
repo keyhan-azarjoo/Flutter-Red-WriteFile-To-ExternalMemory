@@ -2,7 +2,8 @@
 
 This sample demonstrates basic USB interaction and browsing of external
 storage connected to the device. The main screen lists any directories
-under `/storage` that are not part of the internal system storage. Tapping
+found under common mount points such as `/storage`, `/mnt`, `/media`,
+`/run/media` and `/sdcard` that are not part of the internal system storage. Tapping
 one opens a file browser where you can add, delete or rename files. When
 adding a file you can browse the external storage to choose the exact
 destination directory.
@@ -23,8 +24,10 @@ android {
 
 ### Storage permissions
 
-The sample scans `/storage` for removable media. Items are displayed alphabetically. Grant the Storage
-permission on first launch so the app can access external files.
+The sample scans several common directories for removable media, including
+`/storage`, `/mnt`, `/media`, `/run/media` and `/sdcard`. Items are displayed
+alphabetically. Grant the Storage permission on first launch so the app can
+access external files.
 
 ## Getting Started
 
