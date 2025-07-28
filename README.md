@@ -5,6 +5,8 @@ storage connected to the device. The main screen lists any directories
 under `/storage` that are not part of the internal system storage. Tapping
 one opens a file browser where you can add, delete or rename files.
 
+The app uses the `permission_handler` plugin to request storage access.
+
 ### Android NDK version
 
 The `usb_serial` plugin requires Android NDK `27.0.12077973`. If you see a
@@ -16,6 +18,11 @@ android {
     ndkVersion = "27.0.12077973"
 }
 ```
+
+### Storage permissions
+
+The sample scans `/storage` for removable media. Grant the Storage
+permission on first launch so the app can access external files.
 
 ## Getting Started
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:usb_serial/usb_serial.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'storage_browser.dart';
 
 void main() {
@@ -40,7 +41,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _scanStorage();
+    _ensurePermission();
+  }
+
+  Future<void> _ensurePermission() async {
+    final status = await Permission.storage.request();
+    if (status.isGranted) {
+      _scanStorage();
+    } else {
+      setState(() => _status = 'Storage permission denied');
+    }
   }
 
   Future<void> _scanStorage() async {
