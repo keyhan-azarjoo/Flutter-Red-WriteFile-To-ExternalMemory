@@ -57,6 +57,8 @@ class _MyHomePageState extends State<MyHomePage> {
       final manage = await Permission.manageExternalStorage.request();
       if (manage.isGranted) {
         status = manage;
+      } else if (manage.isPermanentlyDenied) {
+        await openAppSettings();
       }
     }
     if (status.isGranted) {
@@ -127,6 +129,20 @@ class _MyHomePageState extends State<MyHomePage> {
     if (fileName == null) return;
 
     final destPath = p.join(_outputDir!.path, fileName);
+    var status = await Permission.storage.status;
+    if (!status.isGranted && Platform.isAndroid) {
+      status = await Permission.manageExternalStorage.request();
+      if (!status.isGranted) {
+        if (status.isPermanentlyDenied) {
+          await openAppSettings();
+        }
+        setState(() => _status = 'Storage permission denied');
+        return;
+      }
+    } else if (!status.isGranted) {
+      setState(() => _status = 'Storage permission denied');
+      return;
+    }
 
     try {
       await _outputDir!.create(recursive: true);

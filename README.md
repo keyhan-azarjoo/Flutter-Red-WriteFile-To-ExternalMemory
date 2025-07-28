@@ -34,7 +34,9 @@ android {
 The sample scans several common directories for removable media, including
 `/storage`, `/mnt`, `/media`, `/run/media` and `/sdcard`. Items are displayed
 alphabetically. Grant the Storage permission (and "All files access" on newer
-Android versions) on first launch so the app can access external files.
+Android versions) on first launch so the app can access external files. If you
+deny the permission and later see a "permission denied" error when copying to
+external memory, re-enable the permission from system settings when prompted.
 
 ## Getting Started
 
