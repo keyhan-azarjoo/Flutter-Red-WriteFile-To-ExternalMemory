@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'directory_picker.dart';
 
 class StorageBrowser extends StatefulWidget {
   final Directory directory;
@@ -36,7 +37,14 @@ class _StorageBrowserState extends State<StorageBrowser> {
     final result = await FilePicker.platform.pickFiles();
     if (result == null || result.files.single.path == null) return;
     final src = File(result.files.single.path!);
-    final dest = File(p.join(_dir.path, p.basename(src.path)));
+    final destDir = await Navigator.push<Directory?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DirectoryPicker(initialDirectory: _dir),
+      ),
+    );
+    if (destDir == null) return;
+    final dest = File(p.join(destDir.path, p.basename(src.path)));
     await src.copy(dest.path);
     _refresh();
   }

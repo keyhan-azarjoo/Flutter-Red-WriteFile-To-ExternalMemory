@@ -3,7 +3,9 @@
 This sample demonstrates basic USB interaction and browsing of external
 storage connected to the device. The main screen lists any directories
 under `/storage` that are not part of the internal system storage. Tapping
-one opens a file browser where you can add, delete or rename files.
+one opens a file browser where you can add, delete or rename files. When
+adding a file you can browse the external storage to choose the exact
+destination directory.
 
 The app uses the `permission_handler` plugin to request storage access.
 
