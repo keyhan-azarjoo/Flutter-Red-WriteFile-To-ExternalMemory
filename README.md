@@ -33,10 +33,11 @@ android {
 
 The sample scans several common directories for removable media, including
 `/storage`, `/mnt`, `/media`, `/run/media` and `/sdcard`. Items are displayed
-alphabetically. Grant the Storage permission (and "All files access" on newer
-Android versions) on first launch so the app can access external files. If you
-deny the permission and later see a "permission denied" error when copying to
-external memory, re-enable the permission from system settings when prompted.
+alphabetically. On Android 10 and later, directly listing these locations may
+fail with "Permission denied" unless the **All files access** permission is
+granted. If scanning fails you can still pick a folder anywhere on the device
+using **Select Output**, which opens the system directory picker. The app also
+shows its own external storage directory obtained via `getExternalStorageDirectory()`.
 
 ## Getting Started
 

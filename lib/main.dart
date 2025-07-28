@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:usb_serial/usb_serial.dart';
 
 import 'storage_browser.dart';
@@ -69,6 +70,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _scanStorage() async {
+    final List<Directory> found = [];
+    final appDir = await getExternalStorageDirectory();
+    if (appDir != null) {
+      found.add(appDir);
+    }
+
     final possibleRoots = [
       Directory('/storage'),
       Directory('/mnt'),
@@ -77,22 +84,26 @@ class _MyHomePageState extends State<MyHomePage> {
       Directory('/sdcard'),
     ];
 
-    final Set<String> seenPaths = {};
-    final List<Directory> found = [];
+    final Set<String> seenPaths = {if (appDir != null) appDir.path};
 
     for (final root in possibleRoots) {
       if (await root.exists()) {
-        final entries = await root
-            .list()
-            .where((e) => e is Directory)
-            .cast<Directory>()
-            .toList();
-        for (final d in entries) {
-          final name = p.basename(d.path);
-          if (name == 'self' || name == 'emulated') continue;
-          if (seenPaths.add(d.path)) {
-            found.add(d);
+        try {
+          final entries = await root
+              .list()
+              .where((e) => e is Directory)
+              .cast<Directory>()
+              .toList();
+          for (final d in entries) {
+            final name = p.basename(d.path);
+            if (name == 'self' || name == 'emulated') continue;
+            if (seenPaths.add(d.path)) {
+              found.add(d);
+            }
           }
+        } on FileSystemException {
+          // Permission denied or inaccessible path.
+          continue;
         }
       }
     }
