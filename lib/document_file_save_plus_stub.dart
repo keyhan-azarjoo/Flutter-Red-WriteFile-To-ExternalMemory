@@ -1,9 +1,10 @@
-import "dart:io";
-import "package:path/path.dart" as path;
-class Saf {
+import 'dart:io';
+import 'package:path/path.dart' as path;
+
+class DocumentFileSavePlus {
   /// Opens the system directory picker and returns the selected URI.
   static Future<String?> openDocumentTree() async {
-    // This stub simply returns null as no directory can be chosen
+    // Stub returns null since no directory can be chosen here.
     return null;
   }
 
@@ -14,7 +15,7 @@ class Saf {
   }
 
   /// Writes [bytes] as [name] into the directory represented by [uri].
-  /// This stub writes to the local filesystem when the [uri] scheme is `file`.
+  /// If [uri] uses the file scheme this simply writes to the local filesystem.
   static Future<void> writeToFile({
     required String uri,
     required String name,
