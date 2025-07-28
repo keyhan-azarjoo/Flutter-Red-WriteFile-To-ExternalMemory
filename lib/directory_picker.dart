@@ -58,7 +58,7 @@ class _DirectoryPickerState extends State<DirectoryPicker> {
                     builder: (_) => DirectoryPicker(initialDirectory: d),
                   ),
                 );
-                if (!mounted) return;
+                if (!context.mounted) return;
                 if (value != null) Navigator.pop(context, value);
               },
             );
