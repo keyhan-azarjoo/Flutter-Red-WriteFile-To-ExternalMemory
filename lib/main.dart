@@ -106,6 +106,17 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _copySelectedFile() async {
+    if (_selectedFile == null || _outputDir == null) return;
+    try {
+      final destPath = p.join(_outputDir!.path, p.basename(_selectedFile!.path));
+      await _selectedFile!.copy(destPath);
+      setState(() => _status = 'File copied to ${_outputDir!.path}');
+    } catch (e) {
+      setState(() => _status = 'Failed to copy file: $e');
+    }
+  }
+
   Future<void> downloadAndSendToUsb(String url) async {
     setState(() => _status = "Downloading file...");
     try {
@@ -203,6 +214,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: (_selectedFile != null && _outputDir != null)
+                      ? _copySelectedFile
+                      : null,
+                  child: const Text('Copy File'),
+                ),
               ],
             ),
           ),
