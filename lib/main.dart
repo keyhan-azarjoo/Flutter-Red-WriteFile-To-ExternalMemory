@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'saf_stub.dart';
 
 import 'storage_browser.dart';
 
@@ -45,7 +44,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Uint8List? _selectedBytes;
   String? _selectedFileName;
   Directory? _outputDir;
-  Uri? _outputUri;
   final _deviceInfo = DeviceInfoPlugin();
 
   Future<int> _androidVersion() async {
@@ -147,31 +145,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _selectOutputDirectory() async {
-    final sdk = await _androidVersion();
-    if (Platform.isAndroid && sdk >= 30) {
-      final uri = await Saf.openDocumentTree();
-      if (!mounted) return;
-      if (uri != null) {
-        final granted = await Saf.persistPermissions(uri);
-        if (granted) {
-          setState(() {
-            _outputUri = Uri.parse(uri);
-            _outputDir = null;
-          });
-        } else {
-          setState(() => _status = 'Storage permission denied');
-        }
-      }
-      return;
-    }
-
     final path = await FilePicker.platform.getDirectoryPath();
     if (!mounted) return;
     if (path != null) {
       if (await _requestStoragePermissions()) {
         setState(() {
           _outputDir = Directory(path);
-          _outputUri = null;
         });
       } else {
         setState(() => _status = 'Storage permission denied');
@@ -200,20 +179,6 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
 
-    final sdk = await _androidVersion();
-    if (Platform.isAndroid && sdk >= 30 && _outputUri != null) {
-      try {
-        await Saf.writeToFile(
-          uri: _outputUri!.toString(),
-          name: fileName,
-          bytes: bytes,
-        );
-        setState(() => _status = 'File copied using SAF');
-      } catch (e) {
-        setState(() => _status = 'Failed to copy file: $e');
-      }
-      return;
-    }
 
     if (_outputDir == null) return;
     if (!await _requestStoragePermissions()) {
@@ -269,20 +234,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: _selectOutputDirectory,
                   child: const Text('Select Output'),
                 ),
-                if (_outputDir != null || _outputUri != null)
+                if (_outputDir != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      _outputDir != null
-                          ? _outputDir!.path
-                          : _outputUri!.toString(),
+                      _outputDir!.path,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: ((_selectedFile != null || _selectedBytes != null) &&
-                          (_outputDir != null || _outputUri != null))
+                          _outputDir != null)
                       ? _copySelectedFile
                       : null,
                   child: const Text('Copy File'),
