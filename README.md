@@ -5,6 +5,18 @@ storage connected to the device. The main screen lists any directories
 under `/storage` that are not part of the internal system storage. Tapping
 one opens a file browser where you can add, delete or rename files.
 
+### Android NDK version
+
+The `usb_serial` plugin requires Android NDK `27.0.12077973`. If you see a
+build failure mentioning a mismatched NDK version, update
+`android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    ndkVersion = "27.0.12077973"
+}
+```
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
